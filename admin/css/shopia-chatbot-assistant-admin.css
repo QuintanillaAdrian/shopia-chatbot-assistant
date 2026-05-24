@@ -1,0 +1,8 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+table.widefat.fixed th, table.widefat.fixed td { padding:6px 8px; border-bottom:1px solid #eee; }
+.shopia-status-badge { font-weight:600; padding:2px 6px; border-radius:4px; color:#fff; }
+.shopia-status-true { background:#27ae60; }
+.shopia-status-false { background:#c0392b; }
