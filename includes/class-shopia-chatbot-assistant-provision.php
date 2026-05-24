@@ -267,12 +267,12 @@ class Shopia_Chatbot_Assistant_Provision {
 
         if ( empty( $data['signatureBaseUrl'] ) ) {
             // Base de la API REST de WooCommerce para firmar o consumir endpoints.
-            $data['signatureBaseUrl'] = home_url() . '/';
+            $data['signatureBaseUrl'] = home_url();
         }
 
         if ( empty( $data['oauthSignatureBaseUrl'] ) ) {
             // Ruta base usada por integraciones OAuth o flujos de autorización similares.
-            $data['oauthSignatureBaseUrl'] = home_url() . '/';
+            $data['oauthSignatureBaseUrl'] = home_url();
         }
 
         if ( empty( $data['consumerKey'] ) && ! empty( $params['generate_keys'] ) ) {
