@@ -247,7 +247,7 @@ class Shopia_Chatbot_Assistant_Provision {
         }
 
         if ( empty( $data['siteUrl'] ) ) {
-            $data['siteUrl'] = home_url() . '/';
+            $data['siteUrl'] = home_url();
         }
 
         if ( empty( $data['storeName'] ) ) {
