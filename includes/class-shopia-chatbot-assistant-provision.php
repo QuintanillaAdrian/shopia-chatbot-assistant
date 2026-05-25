@@ -16,6 +16,8 @@ if ( ! defined( 'WPINC' ) ) {
 class Shopia_Chatbot_Assistant_Provision {
 
     const OPTION_KEY = 'shopia_provision';
+    const EXTERNAL_DOMAIN_OPTION_KEY = 'shopia_external_domain';
+    const ENV_DOMAIN_KEY = 'SITE_DOMAIN';
     // NOTE: removed separate pending option — we track one-shot attempts via `auto_attempted` in the main option
     const AUDIT_OPTION_KEY = 'shopia_provision_audit';
     const MCP_URL = 'https://seahorse-app-r7lxh.ondigitalocean.app/register';
@@ -25,6 +27,15 @@ class Shopia_Chatbot_Assistant_Provision {
     const STATE_FIELD = 'state'; // keys_ready | sent | send_failed
     const ATTEMPTS_FIELD = 'attempts';
 
+    public static function register_routes() {
+    /**
+     * Register REST routes.
+     *
+     * The plugin exposes a POST /shopia/v1/provision endpoint as a manual
+     * entry point for UI-triggered provisioning or for remote callers. The
+     * automatic activation flow calls the same handler in-process, so the
+     * endpoint is optional for automation but useful as a fallback.
+     */
     public static function register_routes() {
         // Expone un endpoint REST propio para poder recibir el provisioning por HTTP.
         register_rest_route( 'shopia/v1', '/provision', array(
@@ -66,13 +77,19 @@ class Shopia_Chatbot_Assistant_Provision {
             return;
         }
 
+        // Do not auto-provision until an external/public domain has been configured.
+        $external_domain = self::get_external_domain();
+        if ( empty( $external_domain ) ) {
+            return;
+        }
+
         $store = get_option( self::OPTION_KEY, array() );
         if ( isset( $store['auto_attempted'] ) && $store['auto_attempted'] ) {
             return;
         }
 
         // Aquí armamos el payload base con datos que WordPress sí conoce.
-        $site_url = home_url();
+        $site_url = self::resolve_site_url();
 
         // Fase 1: generación de llaves (si aún no existen en el store).
         $store = get_option( self::OPTION_KEY, array() );
@@ -158,7 +175,7 @@ class Shopia_Chatbot_Assistant_Provision {
         $payload = self::build_payload( $params );
 
         if ( empty( $payload['siteUrl'] ) ) {
-            $payload['siteUrl'] = home_url();
+            $payload['siteUrl'] = self::resolve_site_url();
         }
 
         // Política: si ya hay un `mcp_status` registrado que indica autorización
@@ -205,8 +222,8 @@ class Shopia_Chatbot_Assistant_Provision {
         // Soportar token de autorización en la llamada al MCP. Se puede pasar
         // por variable de entorno `MCP_BEARER_TOKEN` o por una constante `MCP_BEARER_TOKEN`.
         $token = getenv( 'MCP_BEARER_TOKEN' );
-        if ( empty( $token ) && defined( 'MCP_BEARER_TOKEN' ) ) {
-            $token = MCP_BEARER_TOKEN;
+        if ( empty( $token ) ) {
+            $token = self::read_env_file_value( 'MCP_BEARER_TOKEN' );
         }
         // Allow storing the token in a WP option `shopia_mcp_bearer_token` for environments
         // where exporting env vars into PHP is inconvenient (CI, containers, etc.).
@@ -247,7 +264,7 @@ class Shopia_Chatbot_Assistant_Provision {
         }
 
         if ( empty( $data['siteUrl'] ) ) {
-            $data['siteUrl'] = home_url();
+            $data['siteUrl'] = self::resolve_site_url();
         }
 
         if ( empty( $data['storeName'] ) ) {
@@ -267,12 +284,12 @@ class Shopia_Chatbot_Assistant_Provision {
 
         if ( empty( $data['signatureBaseUrl'] ) ) {
             // Base de la API REST de WooCommerce para firmar o consumir endpoints.
-            $data['signatureBaseUrl'] = home_url();
+            $data['signatureBaseUrl'] = $data['siteUrl'];
         }
 
         if ( empty( $data['oauthSignatureBaseUrl'] ) ) {
             // Ruta base usada por integraciones OAuth o flujos de autorización similares.
-            $data['oauthSignatureBaseUrl'] = home_url();
+            $data['oauthSignatureBaseUrl'] = $data['siteUrl'];
         }
 
         if ( empty( $data['consumerKey'] ) && ! empty( $params['generate_keys'] ) ) {
@@ -285,6 +302,82 @@ class Shopia_Chatbot_Assistant_Provision {
         }
 
         return $data;
+    }
+
+    /**
+     * Returns the configured external domain, if any.
+     */
+    public static function get_external_domain() {
+        $env_domain = getenv( self::ENV_DOMAIN_KEY );
+        if ( empty( $env_domain ) && isset( $_ENV[ self::ENV_DOMAIN_KEY ] ) ) {
+            $env_domain = $_ENV[ self::ENV_DOMAIN_KEY ];
+        }
+        if ( empty( $env_domain ) ) {
+            $env_domain = self::read_env_file_value( self::ENV_DOMAIN_KEY );
+        }
+        if ( ! empty( $env_domain ) ) {
+            return esc_url_raw( trim( (string) $env_domain ) );
+        }
+
+        $url = get_option( self::EXTERNAL_DOMAIN_OPTION_KEY, '' );
+        if ( ! is_string( $url ) ) {
+            return '';
+        }
+        return esc_url_raw( trim( $url ) );
+    }
+
+    /**
+     * Resolves the public site URL using the external domain first.
+     */
+    public static function resolve_site_url() {
+        $external = self::get_external_domain();
+        if ( ! empty( $external ) ) {
+            return $external;
+        }
+        return home_url();
+    }
+
+    /**
+     * Reads a single key from a .env file if the runtime did not export it.
+     */
+    public static function read_env_file_value( $key ) {
+        $paths = array(
+            plugin_dir_path( dirname( __FILE__ ) ) . '.env',
+            ABSPATH . '.env',
+        );
+
+        foreach ( $paths as $path ) {
+            if ( ! file_exists( $path ) || ! is_readable( $path ) ) {
+                continue;
+            }
+
+            $lines = file( $path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
+            if ( false === $lines ) {
+                continue;
+            }
+
+            foreach ( $lines as $line ) {
+                $line = trim( $line );
+                if ( '' === $line || '#' === $line[0] ) {
+                    continue;
+                }
+
+                $parts = explode( '=', $line, 2 );
+                if ( 2 !== count( $parts ) ) {
+                    continue;
+                }
+
+                if ( trim( $parts[0] ) !== $key ) {
+                    continue;
+                }
+
+                $value = trim( $parts[1] );
+                $value = trim( $value, "\"'" );
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -310,12 +403,12 @@ class Shopia_Chatbot_Assistant_Provision {
     public static function store_provision( $payload, $persist_secret = false ) {
         // Guardamos el estado local del último provisioning exitoso o intentado.
         $store = get_option( self::OPTION_KEY, array() );
-        $store['siteUrl'] = isset( $payload['siteUrl'] ) ? $payload['siteUrl'] : home_url();
+        $store['siteUrl'] = isset( $payload['siteUrl'] ) ? $payload['siteUrl'] : self::resolve_site_url();
         $store['storeName'] = isset( $payload['storeName'] ) ? $payload['storeName'] : get_bloginfo( 'name' );
         $store['wordpressVersion'] = isset( $payload['wordpressVersion'] ) ? $payload['wordpressVersion'] : get_bloginfo( 'version' );
         $store['woocommerceVersion'] = isset( $payload['woocommerceVersion'] ) ? $payload['woocommerceVersion'] : ( defined( 'WC_VERSION' ) ? WC_VERSION : '' );
-        $store['signatureBaseUrl'] = isset( $payload['signatureBaseUrl'] ) ? $payload['signatureBaseUrl'] : '';
-        $store['oauthSignatureBaseUrl'] = isset( $payload['oauthSignatureBaseUrl'] ) ? $payload['oauthSignatureBaseUrl'] : '';
+        $store['signatureBaseUrl'] = ! empty( $payload['signatureBaseUrl'] ) ? $payload['signatureBaseUrl'] : $store['siteUrl'];
+        $store['oauthSignatureBaseUrl'] = ! empty( $payload['oauthSignatureBaseUrl'] ) ? $payload['oauthSignatureBaseUrl'] : $store['siteUrl'];
         $store['authMode'] = isset( $payload['authMode'] ) ? $payload['authMode'] : '';
         $store['consumerKey'] = isset( $payload['consumerKey'] ) ? sanitize_text_field( $payload['consumerKey'] ) : '';
         $store['consumerSecret_encrypted'] = '';

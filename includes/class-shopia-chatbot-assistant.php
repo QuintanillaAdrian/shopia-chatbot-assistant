@@ -80,7 +80,6 @@ class Shopia_Chatbot_Assistant {
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
-
 	}
 
 	/**
@@ -126,6 +125,7 @@ class Shopia_Chatbot_Assistant {
 
 		// Provisioning handler
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-provision.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-cli.php';
 
 		// El loader es quien finalmente registra add_action/add_filter en WordPress.
 		$this->loader = new Shopia_Chatbot_Assistant_Loader();
@@ -189,7 +189,6 @@ class Shopia_Chatbot_Assistant {
 
 		// register REST routes for provisioning
 		$this->loader->add_action( 'rest_api_init', 'Shopia_Chatbot_Assistant_Provision', 'register_routes' );
-
 	}
 
 	/**
