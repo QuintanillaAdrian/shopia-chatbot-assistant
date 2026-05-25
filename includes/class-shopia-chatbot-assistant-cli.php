@@ -19,10 +19,6 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
     class Shopia_Chatbot_Assistant_CLI {
 
         /**
-         * Provision command.
-         * Usage: wp shopia provision --generate_keys=1 --persist_secret=1
-         */
-        /**
          * Provision command entrypoint.
          *
          * Supported flags (assoc args):
@@ -43,45 +39,41 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
                 $params['persist_secret'] = true;
             }
 
+            if ( ! class_exists( 'WP_REST_Request' ) ) {
+                WP_CLI::error( 'WP REST classes not available in this context.' );
+            }
+
             // Try to construct a WP_REST_Request so the provisioning handler receives
             // the same shape it expects when called over HTTP. In some CLI contexts
             // WP internals don't populate JSON params correctly, so we provide a
-            // tiny fallback object that implements get_json_params(). This keeps
-            // the provisioning code unchanged and lets it operate as if it were
-            // handling a REST request.
-            if ( class_exists( 'WP_REST_Request' ) ) {
-                $request = new WP_REST_Request( 'POST', '/shopia/v1/provision' );
-                $request->set_body_params( $params );
+            // tiny fallback object that implements get_json_params().
+            $request = new WP_REST_Request( 'POST', '/shopia/v1/provision' );
+            $request->set_body_params( $params );
 
-                if ( ! empty( $request->get_json_params() ) ) {
-                    $response = Shopia_Chatbot_Assistant_Provision::handle_provision( $request );
-                } else {
-                    // Lightweight anonymous fallback with get_json_params().
-                    $fallback = new class( $params ) {
-                        private $p;
-                        public function __construct( $p ) { $this->p = $p; }
-                        public function get_json_params() { return $this->p; }
-                    };
-                    $response = Shopia_Chatbot_Assistant_Provision::handle_provision( $fallback );
-                }
+            if ( ! empty( $request->get_json_params() ) ) {
+                $response = Shopia_Chatbot_Assistant_Provision::handle_provision( $request );
+            } else {
+                $fallback = new class( $params ) {
+                    private $p;
+                    public function __construct( $p ) { $this->p = $p; }
+                    public function get_json_params() { return $this->p; }
+                };
+                $response = Shopia_Chatbot_Assistant_Provision::handle_provision( $fallback );
             }
 
-                if ( is_wp_error( $response ) ) {
-                    WP_CLI::error( $response->get_error_message() );
-                }
+            if ( is_wp_error( $response ) ) {
+                WP_CLI::error( $response->get_error_message() );
+            }
 
-                if ( is_a( $response, 'WP_REST_Response' ) ) {
-                    $status = method_exists( $response, 'get_status' ) ? $response->get_status() : 0;
-                    $data = method_exists( $response, 'get_data' ) ? $response->get_data() : null;
-                    WP_CLI::line( 'Provision finished with HTTP status: ' . $status );
-                    if ( $data ) {
-                        WP_CLI::print_value( $data );
-                    }
-                } else {
-                    WP_CLI::line( 'Provision completed.' );
+            if ( is_a( $response, 'WP_REST_Response' ) ) {
+                $status = method_exists( $response, 'get_status' ) ? $response->get_status() : 0;
+                $data = method_exists( $response, 'get_data' ) ? $response->get_data() : null;
+                WP_CLI::line( 'Provision finished with HTTP status: ' . $status );
+                if ( $data ) {
+                    WP_CLI::print_value( $data );
                 }
             } else {
-                WP_CLI::error( 'WP REST classes not available in this context.' );
+                WP_CLI::line( 'Provision completed.' );
             }
         }
     }

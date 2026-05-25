@@ -27,7 +27,6 @@ class Shopia_Chatbot_Assistant_Provision {
     const STATE_FIELD = 'state'; // keys_ready | sent | send_failed
     const ATTEMPTS_FIELD = 'attempts';
 
-    public static function register_routes() {
     /**
      * Register REST routes.
      *
