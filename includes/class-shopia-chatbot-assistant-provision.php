@@ -17,7 +17,7 @@ class Shopia_Chatbot_Assistant_Provision {
 
     const OPTION_KEY = 'shopia_provision';
     const EXTERNAL_DOMAIN_OPTION_KEY = 'shopia_external_domain';
-    const ENV_DOMAIN_KEY = 'SITE_DOMAIN';
+    // SITE_DOMAIN is read dynamically via getenv/read_env_file_value, not via constant
     // NOTE: removed separate pending option — we track one-shot attempts via `auto_attempted` in the main option
     const AUDIT_OPTION_KEY = 'shopia_provision_audit';
     const MCP_URL = 'https://seahorse-app-r7lxh.ondigitalocean.app/register';
@@ -307,12 +307,15 @@ class Shopia_Chatbot_Assistant_Provision {
      * Returns the configured external domain, if any.
      */
     public static function get_external_domain() {
-        $env_domain = getenv( self::ENV_DOMAIN_KEY );
-        if ( empty( $env_domain ) && isset( $_ENV[ self::ENV_DOMAIN_KEY ] ) ) {
-            $env_domain = $_ENV[ self::ENV_DOMAIN_KEY ];
+        // Leer SITE_DOMAIN de la misma forma que MCP_BEARER_TOKEN:
+        // 1) getenv('SITE_DOMAIN') / $_ENV['SITE_DOMAIN']
+        // 2) .env mediante read_env_file_value('SITE_DOMAIN')
+        $env_domain = getenv( 'SITE_DOMAIN' );
+        if ( empty( $env_domain ) && isset( $_ENV['SITE_DOMAIN'] ) ) {
+            $env_domain = $_ENV['SITE_DOMAIN'];
         }
         if ( empty( $env_domain ) ) {
-            $env_domain = self::read_env_file_value( self::ENV_DOMAIN_KEY );
+            $env_domain = self::read_env_file_value( 'SITE_DOMAIN' );
         }
         if ( ! empty( $env_domain ) ) {
             return esc_url_raw( trim( (string) $env_domain ) );
