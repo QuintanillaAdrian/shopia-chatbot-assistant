@@ -568,6 +568,21 @@ class Shopia_Chatbot_Assistant_Provision {
             return new WP_Error( 'no_data', 'No provision data stored' );
         }
         $payload = $store;
+
+        // En reenvío manual, siempre usamos el dominio actual resuelto para evitar
+        // reenviar URLs antiguas guardadas en `shopia_provision`.
+        $resolved_site_url = self::resolve_site_url();
+        if ( ! empty( $resolved_site_url ) ) {
+            $payload['siteUrl'] = $resolved_site_url;
+            $payload['signatureBaseUrl'] = $resolved_site_url;
+            $payload['oauthSignatureBaseUrl'] = $resolved_site_url;
+
+            // Persistimos también el dominio actualizado para próximos reintentos.
+            $store['siteUrl'] = $resolved_site_url;
+            $store['signatureBaseUrl'] = $resolved_site_url;
+            $store['oauthSignatureBaseUrl'] = $resolved_site_url;
+        }
+
         if ( ! empty( $store['consumerSecret_encrypted'] ) ) {
             // Si el secreto fue persistido, lo recuperamos solo para este envío.
             $payload['consumerSecret'] = self::decrypt_secret( $store['consumerSecret_encrypted'] );
