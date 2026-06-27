@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Fired during plugin deactivation
@@ -6,8 +6,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  */
 
 /**
@@ -16,11 +16,11 @@
  * This class defines all code necessary to run during the plugin's deactivation.
  *
  * @since      1.0.0
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  * @author     Quintanilla <adrianq1299@gmail.com>
  */
-class Shopia_Chatbot_Assistant_Deactivator {
+class Chatbot_Assistant_Deactivator {
 
 	/**
 	 * Short Description. (use period)

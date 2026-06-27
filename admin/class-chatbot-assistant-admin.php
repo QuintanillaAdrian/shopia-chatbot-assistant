@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * The admin-specific functionality of the plugin.
@@ -6,8 +6,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/admin
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/admin
  */
 
 /**
@@ -16,11 +16,11 @@
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the admin-specific stylesheet and JavaScript.
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/admin
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/admin
  * @author     Quintanilla <adrianq1299@gmail.com>
  */
-class Shopia_Chatbot_Assistant_Admin {
+class Chatbot_Assistant_Admin {
 
 	/**
 	 * The ID of this plugin.
@@ -60,10 +60,10 @@ class Shopia_Chatbot_Assistant_Admin {
 	public function register_menu() {
 		// Creamos una página de nivel superior para ver el estado del provisioning.
 		add_menu_page(
-			'Asistente Shopia',
-			'Asistente Shopia',
+			'Asistente Chatbot',
+			'Asistente Chatbot',
 			'manage_options',
-			'shopia-chatbot-assistant',
+			'chatbot-assistant',
 			array( $this, 'display_admin_page' ),
 			'dashicons-format-chat'
 		);
@@ -74,11 +74,11 @@ class Shopia_Chatbot_Assistant_Admin {
 			return;
 		}
 		// Leemos el estado local y la bitácora antes de cargar la vista.
-		$store = get_option( 'shopia_provision' );
-		$audit = Shopia_Chatbot_Assistant_Provision::get_audit_log();
-		$nonce = wp_create_nonce( 'shopia_resend_provision' );
-		$nonce_update = wp_create_nonce( 'shopia_update_keys' );
-		require_once plugin_dir_path( __FILE__ ) . 'partials/shopia-chatbot-assistant-admin-display.php';
+		$store = get_option( 'chatbot_provision' );
+		$audit = Chatbot_Assistant_Provision::get_audit_log();
+		$nonce = wp_create_nonce( 'chatbot_resend_provision' );
+		$nonce_update = wp_create_nonce( 'chatbot_update_keys' );
+		require_once plugin_dir_path( __FILE__ ) . 'partials/chatbot-assistant-admin-display.php';
 	}
 
 	public function ajax_resend_provision() {
@@ -86,9 +86,9 @@ class Shopia_Chatbot_Assistant_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'error' => 'forbidden' ), 403 );
 		}
-		check_ajax_referer( 'shopia_resend_provision' );
+		check_ajax_referer( 'chatbot_resend_provision' );
 		// Reutilizamos el mismo servicio de provisioning para reenviar la última configuración conocida.
-		$result = Shopia_Chatbot_Assistant_Provision::resend_provision();
+		$result = Chatbot_Assistant_Provision::resend_provision();
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'error' => $result->get_error_message() ), 500 );
 		} else {
@@ -100,7 +100,7 @@ class Shopia_Chatbot_Assistant_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'error' => 'forbidden' ), 403 );
 		}
-		check_ajax_referer( 'shopia_update_keys' );
+		check_ajax_referer( 'chatbot_update_keys' );
 
 		$ck = isset( $_POST['consumerKey'] ) ? sanitize_text_field( wp_unslash( $_POST['consumerKey'] ) ) : '';
 		$cs = isset( $_POST['consumerSecret'] ) ? sanitize_text_field( wp_unslash( $_POST['consumerSecret'] ) ) : '';
@@ -126,7 +126,7 @@ class Shopia_Chatbot_Assistant_Admin {
 				} else {
 					$db_key = hash_hmac( 'sha256', $ck, 'wc-api' );
 				}
-				$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE consumer_key = %s LIMIT 1", $db_key ), ARRAY_A );
+				$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM `" . esc_sql( $table ) . "` WHERE consumer_key = %s LIMIT 1", $db_key ), ARRAY_A );
 				if ( empty( $row ) ) {
 					wp_send_json_error( array( 'error' => 'validation_failed', 'message' => 'No se encontró la clave en la tabla de WooCommerce' ), 400 );
 				}
@@ -145,15 +145,15 @@ class Shopia_Chatbot_Assistant_Admin {
 			wp_send_json_error( array( 'error' => 'validation_failed', 'message' => 'No se pudo validar la pareja consumer key / consumer secret' ), 400 );
 		}
 
-		$store = get_option( 'shopia_provision', array() );
+		$store = get_option( 'chatbot_provision', array() );
 		$store['consumerKey'] = $ck;
 		// The pair is valid, so we persist locally by default.
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-provision.php';
-		$store['consumerSecret_encrypted'] = Shopia_Chatbot_Assistant_Provision::encrypt_secret( $cs );
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-chatbot-assistant-provision.php';
+		$store['consumerSecret_encrypted'] = Chatbot_Assistant_Provision::encrypt_secret( $cs );
 		$store['consumerSecret_last4'] = substr( $cs, -4 );
 		$store['synced_at'] = current_time( 'mysql' );
-		update_option( 'shopia_provision', $store, false );
-		Shopia_Chatbot_Assistant_Provision::log_event( 'info', 'Admin updated keys', array( 'persist' => 'yes' ) );
+		update_option( 'chatbot_provision', $store, false );
+		Chatbot_Assistant_Provision::log_event( 'info', 'Admin updated keys', array( 'persist' => 'yes' ) );
 		wp_send_json_success( array( 'status' => 'ok' ) );
 	}
 
@@ -168,16 +168,16 @@ class Shopia_Chatbot_Assistant_Admin {
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Shopia_Chatbot_Assistant_Loader as all of the hooks are defined
+		 * defined in Chatbot_Assistant_Loader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Shopia_Chatbot_Assistant_Loader will then create the relationship
+		 * The Chatbot_Assistant_Loader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
 
 		// Cargamos los estilos del panel solo en el área administrativa.
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/shopia-chatbot-assistant-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/chatbot-assistant-admin.css', array(), $this->version, 'all' );
 
 	}
 
@@ -192,16 +192,16 @@ class Shopia_Chatbot_Assistant_Admin {
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Shopia_Chatbot_Assistant_Loader as all of the hooks are defined
+		 * defined in Chatbot_Assistant_Loader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Shopia_Chatbot_Assistant_Loader will then create the relationship
+		 * The Chatbot_Assistant_Loader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
 
 		// Igual que con los estilos, el JS se limita al admin.
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/shopia-chatbot-assistant-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/chatbot-assistant-admin.js', array( 'jquery' ), $this->version, false );
 
 	}
 

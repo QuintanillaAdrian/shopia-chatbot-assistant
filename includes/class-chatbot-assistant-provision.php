@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Provisioning REST endpoint and MCP sender.
  *
@@ -13,13 +13,13 @@ if ( ! defined( 'WPINC' ) ) {
     die;
 }
 
-class Shopia_Chatbot_Assistant_Provision {
+class Chatbot_Assistant_Provision {
 
-    const OPTION_KEY = 'shopia_provision';
-    const EXTERNAL_DOMAIN_OPTION_KEY = 'shopia_external_domain';
+    const OPTION_KEY = 'chatbot_provision';
+    const EXTERNAL_DOMAIN_OPTION_KEY = 'chatbot_external_domain';
     // SITE_DOMAIN is read dynamically via getenv/read_env_file_value, not via constant
     // NOTE: removed separate pending option — we track one-shot attempts via `auto_attempted` in the main option
-    const AUDIT_OPTION_KEY = 'shopia_provision_audit';
+    const AUDIT_OPTION_KEY = 'chatbot_provision_audit';
     const MCP_URL = 'https://seahorse-app-r7lxh.ondigitalocean.app/register';
     const SECRET_CIPHER = 'AES-256-CBC';
     const AUDIT_LIMIT = 10;
@@ -30,37 +30,47 @@ class Shopia_Chatbot_Assistant_Provision {
     /**
      * Register REST routes.
      *
-     * The plugin exposes a POST /shopia/v1/provision endpoint as a manual
+     * The plugin exposes a POST /chatbot/v1/provision endpoint as a manual
      * entry point for UI-triggered provisioning or for remote callers. The
      * automatic activation flow calls the same handler in-process, so the
      * endpoint is optional for automation but useful as a fallback.
      */
     public static function register_routes() {
         // Expone un endpoint REST propio para poder recibir el provisioning por HTTP.
-        register_rest_route( 'shopia/v1', '/provision', array(
+        register_rest_route( 'chatbot/v1', '/provision', array(
             'methods' => 'POST',
             'callback' => array( __CLASS__, 'handle_provision' ),
-            'permission_callback' => '__return_true',
+            'permission_callback' => array( __CLASS__, 'provision_permission_check' ),
         ) );
     }
 
     /**
-     * Registra las rutas REST del plugin.
-     * Ruta: POST /wp-json/shopia/v1/provision
-     * - No requiere autenticación en el endpoint porque se usa en entornos controlados
-     *   (la seguridad adicional se debe aplicar en el MCP o la red de despliegue).
+     * Valida que el llamante sea un admin de WP o presente el bearer token del MCP.
      */
+    public static function provision_permission_check( $request ) {
+        // Los administradores de WordPress siempre tienen acceso.
+        if ( current_user_can( 'manage_options' ) ) {
+            return true;
+        }
 
-    public static function queue_activation_provision() {
-        // Marcamos el trabajo como pendiente para ejecutarlo cuando WordPress ya esté cargado.
-        // Deprecated: queue mechanism removed. Keep for backward-compatibility (no-op).
-        self::log_event( 'info', 'queue_activation_provision() called (noop)', array() );
+        // Los llamantes externos deben presentar el bearer token configurado.
+        $token = getenv( 'MCP_BEARER_TOKEN' );
+        if ( empty( $token ) ) {
+            $token = self::read_env_file_value( 'MCP_BEARER_TOKEN' );
+        }
+        if ( empty( $token ) && function_exists( 'get_option' ) ) {
+            $token = get_option( 'chatbot_mcp_bearer_token', '' );
+        }
+
+        if ( ! empty( $token ) ) {
+            $auth_header = $request->get_header( 'authorization' );
+            if ( ! empty( $auth_header ) && hash_equals( 'Bearer ' . $token, $auth_header ) ) {
+                return true;
+            }
+        }
+
+        return new WP_Error( 'rest_forbidden', 'Unauthorized', array( 'status' => 403 ) );
     }
-
-    /**
-     * Cola un intento de provisioning durante la activación del plugin.
-     * Se usa desde el activador para posponer la ejecución hasta que WP esté listo.
-     */
 
     public static function maybe_run_pending_provision() {
             /**
@@ -71,7 +81,7 @@ class Shopia_Chatbot_Assistant_Provision {
              * - Si tiene éxito, guarda estado local y envía al MCP
              */
     
-        // Only run once: use a flag `auto_attempted` inside the main `shopia_provision` option
+        // Only run once: use a flag `auto_attempted` inside the main `chatbot_provision` option
         if ( ! function_exists( 'get_home_url' ) ) {
             return;
         }
@@ -224,10 +234,10 @@ class Shopia_Chatbot_Assistant_Provision {
         if ( empty( $token ) ) {
             $token = self::read_env_file_value( 'MCP_BEARER_TOKEN' );
         }
-        // Allow storing the token in a WP option `shopia_mcp_bearer_token` for environments
+        // Allow storing the token in a WP option `chatbot_mcp_bearer_token` for environments
         // where exporting env vars into PHP is inconvenient (CI, containers, etc.).
         if ( empty( $token ) && function_exists( 'get_option' ) ) {
-            $opt_token = get_option( 'shopia_mcp_bearer_token', '' );
+            $opt_token = get_option( 'chatbot_mcp_bearer_token', '' );
             if ( ! empty( $opt_token ) ) {
                 $token = $opt_token;
             }
@@ -431,7 +441,7 @@ class Shopia_Chatbot_Assistant_Provision {
     }
 
     /**
-     * Guarda la información del provisioning en la opción `shopia_provision`.
+     * Guarda la información del provisioning en la opción `chatbot_provision`.
      * Si `persist_secret` es true, almacena el secreto cifrado y los últimos 4 caracteres.
      */
 
@@ -443,6 +453,11 @@ class Shopia_Chatbot_Assistant_Provision {
         $store['mcp_updated_at'] = current_time( 'mysql' );
         update_option( self::OPTION_KEY, $store, false );
 
+        // Eliminamos la api_key en texto plano en cuanto el backend confirma recepción.
+        if ( $store['mcp_status'] >= 200 && $store['mcp_status'] < 300 ) {
+            delete_option( 'chatbot_api_key_plain' );
+        }
+
         self::log_event( 'info', 'MCP response received', array( 'status' => $store['mcp_status'] ) );
     }
 
@@ -451,10 +466,12 @@ class Shopia_Chatbot_Assistant_Provision {
      */
 
     public static function encrypt_secret( $secret ) {
-        // Cifrado simple con claves derivadas de salts de WordPress.
+        // IV aleatorio de 16 bytes por cada cifrado — evita IV determinista.
         $key = hash( 'sha256', wp_salt( 'auth' ), true );
-        $iv = substr( hash( 'sha256', wp_salt( 'secure_auth' ), true ), 0, 16 );
-        return base64_encode( openssl_encrypt( $secret, self::SECRET_CIPHER, $key, OPENSSL_RAW_DATA, $iv ) );
+        $iv  = random_bytes( 16 );
+        $cipher = openssl_encrypt( $secret, self::SECRET_CIPHER, $key, OPENSSL_RAW_DATA, $iv );
+        // Prefijamos el IV al ciphertext para poder recuperarlo en el descifrado.
+        return base64_encode( $iv . $cipher );
     }
 
     /**
@@ -468,8 +485,11 @@ class Shopia_Chatbot_Assistant_Provision {
             return '';
         }
         $key = hash( 'sha256', wp_salt( 'auth' ), true );
-        $iv = substr( hash( 'sha256', wp_salt( 'secure_auth' ), true ), 0, 16 );
-        return openssl_decrypt( base64_decode( $encrypted ), self::SECRET_CIPHER, $key, OPENSSL_RAW_DATA, $iv );
+        $raw = base64_decode( $encrypted );
+        // Los primeros 16 bytes son el IV generado en encrypt_secret().
+        $iv     = substr( $raw, 0, 16 );
+        $cipher = substr( $raw, 16 );
+        return openssl_decrypt( $cipher, self::SECRET_CIPHER, $key, OPENSSL_RAW_DATA, $iv );
     }
 
     /**
@@ -573,7 +593,7 @@ class Shopia_Chatbot_Assistant_Provision {
         $payload = $store;
 
         // En reenvío manual, siempre usamos el dominio actual resuelto para evitar
-        // reenviar URLs antiguas guardadas en `shopia_provision`.
+        // reenviar URLs antiguas guardadas en `chatbot_provision`.
         $resolved_site_url = self::resolve_site_url();
         if ( ! empty( $resolved_site_url ) ) {
             $payload['siteUrl'] = $resolved_site_url;
@@ -636,7 +656,7 @@ class Shopia_Chatbot_Assistant_Provision {
     }
 
     /**
-     * Añade una entrada a la bitácora local `shopia_provision_audit`.
+     * Añade una entrada a la bitácora local `chatbot_provision_audit`.
      * Mantiene solo las últimas `AUDIT_LIMIT` entradas.
      */
 

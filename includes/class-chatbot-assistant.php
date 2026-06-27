@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * The file that defines the core plugin class
@@ -9,8 +9,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  */
 
 /**
@@ -23,11 +23,11 @@
  * version of the plugin.
  *
  * @since      1.0.0
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  * @author     Quintanilla <adrianq1299@gmail.com>
  */
-class Shopia_Chatbot_Assistant {
+class Chatbot_Assistant {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -35,7 +35,7 @@ class Shopia_Chatbot_Assistant {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      Shopia_Chatbot_Assistant_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      Chatbot_Assistant_Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	protected $loader;
 
@@ -68,12 +68,12 @@ class Shopia_Chatbot_Assistant {
 	 */
 	public function __construct() {
 		// Inicialización mínima: versión + slug del plugin.
-		if ( defined( 'SHOPIA_CHATBOT_ASSISTANT_VERSION' ) ) {
-			$this->version = SHOPIA_CHATBOT_ASSISTANT_VERSION;
+		if ( defined( 'Chatbot_Assistant_VERSION' ) ) {
+			$this->version = Chatbot_Assistant_VERSION;
 		} else {
 			$this->version = '1.0.0';
 		}
-		$this->plugin_name = 'shopia-chatbot-assistant';
+		$this->plugin_name = 'chatbot-assistant';
 
 		// Orden importante: primero cargamos clases, luego locale y por último hooks.
 		$this->load_dependencies();
@@ -87,10 +87,10 @@ class Shopia_Chatbot_Assistant {
 	 *
 	 * Include the following files that make up the plugin:
 	 *
-	 * - Shopia_Chatbot_Assistant_Loader. Orchestrates the hooks of the plugin.
-	 * - Shopia_Chatbot_Assistant_i18n. Defines internationalization functionality.
-	 * - Shopia_Chatbot_Assistant_Admin. Defines all hooks for the admin area.
-	 * - Shopia_Chatbot_Assistant_Public. Defines all hooks for the public side of the site.
+	 * - Chatbot_Assistant_Loader. Orchestrates the hooks of the plugin.
+	 * - Chatbot_Assistant_i18n. Defines internationalization functionality.
+	 * - Chatbot_Assistant_Admin. Defines all hooks for the admin area.
+	 * - Chatbot_Assistant_Public. Defines all hooks for the public side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -104,38 +104,38 @@ class Shopia_Chatbot_Assistant {
 		 * The class responsible for orchestrating the actions and filters of the
 		 * core plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-loader.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-chatbot-assistant-loader.php';
 
 		/**
 		 * The class responsible for defining internationalization functionality
 		 * of the plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-i18n.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-chatbot-assistant-i18n.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-shopia-chatbot-assistant-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-chatbot-assistant-admin.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-shopia-chatbot-assistant-public.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-chatbot-assistant-public.php';
 
 		// Provisioning handler
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-provision.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-shopia-chatbot-assistant-cli.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-chatbot-assistant-provision.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-chatbot-assistant-cli.php';
 
 		// El loader es quien finalmente registra add_action/add_filter en WordPress.
-		$this->loader = new Shopia_Chatbot_Assistant_Loader();
+		$this->loader = new Chatbot_Assistant_Loader();
 
 	}
 
 	/**
 	 * Define the locale for this plugin for internationalization.
 	 *
-	 * Uses the Shopia_Chatbot_Assistant_i18n class in order to set the domain and to register the hook
+	 * Uses the Chatbot_Assistant_i18n class in order to set the domain and to register the hook
 	 * with WordPress.
 	 *
 	 * @since    1.0.0
@@ -143,7 +143,7 @@ class Shopia_Chatbot_Assistant {
 	 */
 	private function set_locale() {
 
-		$plugin_i18n = new Shopia_Chatbot_Assistant_i18n();
+		$plugin_i18n = new Chatbot_Assistant_i18n();
 
 		// Cargamos traducciones cuando WordPress ya terminó de cargar plugins.
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
@@ -159,15 +159,15 @@ class Shopia_Chatbot_Assistant {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Shopia_Chatbot_Assistant_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new Chatbot_Assistant_Admin( $this->get_plugin_name(), $this->get_version() );
 
 		// Todo lo del panel admin (assets, menú y acción AJAX de reenvío).
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'register_menu' );
-		$this->loader->add_action( 'wp_ajax_shopia_resend_provision', $plugin_admin, 'ajax_resend_provision' );
+		$this->loader->add_action( 'wp_ajax_chatbot_resend_provision', $plugin_admin, 'ajax_resend_provision' );
 		// AJAX handler for updating keys from admin UI
-		$this->loader->add_action( 'wp_ajax_shopia_update_keys', $plugin_admin, 'ajax_update_keys' );
+		$this->loader->add_action( 'wp_ajax_chatbot_update_keys', $plugin_admin, 'ajax_update_keys' );
 
 	}
 
@@ -180,15 +180,15 @@ class Shopia_Chatbot_Assistant {
 	 */
 	private function define_public_hooks() {
 
-		$plugin_public = new Shopia_Chatbot_Assistant_Public( $this->get_plugin_name(), $this->get_version() );
+		$plugin_public = new Chatbot_Assistant_Public( $this->get_plugin_name(), $this->get_version() );
 
 		// Hooks del front y del flujo automático de provisioning.
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-		$this->loader->add_action( 'init', 'Shopia_Chatbot_Assistant_Provision', 'maybe_run_pending_provision' );
+		$this->loader->add_action( 'init', 'Chatbot_Assistant_Provision', 'maybe_run_pending_provision' );
 
 		// register REST routes for provisioning
-		$this->loader->add_action( 'rest_api_init', 'Shopia_Chatbot_Assistant_Provision', 'register_routes' );
+		$this->loader->add_action( 'rest_api_init', 'Chatbot_Assistant_Provision', 'register_routes' );
 	}
 
 	/**
@@ -216,7 +216,7 @@ class Shopia_Chatbot_Assistant {
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
 	 * @since     1.0.0
-	 * @return    Shopia_Chatbot_Assistant_Loader    Orchestrates the hooks of the plugin.
+	 * @return    Chatbot_Assistant_Loader    Orchestrates the hooks of the plugin.
 	 */
 	public function get_loader() {
 		return $this->loader;

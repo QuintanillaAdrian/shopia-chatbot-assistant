@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Provide a admin area view for the plugin
@@ -8,19 +8,19 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/admin/partials
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/admin/partials
  */
 ?>
 
 <!-- This file should primarily consist of HTML with a little bit of PHP. -->
 <div class="wrap">
-	<h1>Asistente Shopia — Provisionamiento</h1>
+	<h1>Asistente Chatbot — Provisionamiento</h1>
 	<!-- Esta pantalla muestra un resumen simple para terceros y deja el detalle técnico como opcional. -->
 	<p>Conexión más reciente con el asistente virtual.</p>
 	<?php if ( empty( $store ) ) : ?>
 		<p><strong>Aún no hay datos de provisionamiento almacenados.</strong></p>
-		<p>WordPress todavía no guardó una alta válida en la opción <code>shopia_provision</code>.</p>
+		<p>WordPress todavía no guardó una alta válida en la opción <code>chatbot_provision</code>.</p>
 	<?php else: ?>
 		<h2>Resumen de conexión</h2>
 		<?php
@@ -81,17 +81,17 @@
 
 		<h3 style="margin-top:18px">Actualizar credenciales manualmente</h3>
 		<p>Si ya tienes un par de claves generadas en WooCommerce, puedes pegarlas aquí. El plugin validará la pareja y la guardará solo si es correcta.</p>
-		<form id="shopia-keys-form" style="max-width:720px;background:#fff;padding:12px;border:1px solid #eee;">
+		<form id="chatbot-keys-form" style="max-width:720px;background:#fff;padding:12px;border:1px solid #eee;">
 			<table class="form-table">
 				<tbody>
 					<tr>
-						<th scope="row"><label for="shopia_consumerKey">Clave pública (consumer key)</label></th>
-						<td><input id="shopia_consumerKey" name="consumerKey" type="text" class="regular-text" value="<?php echo htmlspecialchars( isset( $store['consumerKey'] ) ? $store['consumerKey'] : '', ENT_QUOTES, 'UTF-8' ); ?>" required></td>
+						<th scope="row"><label for="chatbot_consumerKey">Clave pública (consumer key)</label></th>
+						<td><input id="chatbot_consumerKey" name="consumerKey" type="text" class="regular-text" value="<?php echo htmlspecialchars( isset( $store['consumerKey'] ) ? $store['consumerKey'] : '', ENT_QUOTES, 'UTF-8' ); ?>" required></td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="shopia_consumerSecret">Secreto (consumer secret)</label></th>
+						<th scope="row"><label for="chatbot_consumerSecret">Secreto (consumer secret)</label></th>
 						<td>
-							<input id="shopia_consumerSecret" name="consumerSecret" type="password" class="regular-text" placeholder="Pega el secreto generado en WooCommerce" required>
+							<input id="chatbot_consumerSecret" name="consumerSecret" type="password" class="regular-text" placeholder="Pega el secreto generado en WooCommerce" required>
 							<?php if ( ! empty( $store['consumerSecret_last4'] ) ) : ?>
 								<p class="description">Últimos 4: <?php echo htmlspecialchars( $store['consumerSecret_last4'], ENT_QUOTES, 'UTF-8' ); ?></p>
 							<?php endif; ?>
@@ -100,8 +100,8 @@
 				</tbody>
 			</table>
 			<p>
-				<button id="shopia-keys-submit" class="button button-secondary">Guardar credenciales</button>
-				<span id="shopia-keys-result" style="margin-left:12px"></span>
+				<button id="chatbot-keys-submit" class="button button-secondary">Guardar credenciales</button>
+				<span id="chatbot-keys-result" style="margin-left:12px"></span>
 			</p>
 		</form>
 
@@ -137,42 +137,38 @@
 		</details>
 		<p>
 				<!-- Botón que reutiliza el AJAX del admin para reintentar el envío al MCP. -->
-			<button id="shopia-resend" class="button button-primary">Actualizar conexión</button>
-			<span id="shopia-result" style="margin-left:10px"></span>
+			<button id="chatbot-resend" class="button button-primary">Actualizar conexión</button>
+			<span id="chatbot-result" style="margin-left:10px"></span>
 		</p>
 	<?php endif; ?>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-	// Si la página no tiene botón de reenvío, no hacemos nada.
-	var btn = document.getElementById('shopia-resend');
+	var btn = document.getElementById('chatbot-resend');
 	if (!btn) return;
 	btn.addEventListener('click', function(){
-		// Informamos al usuario que el reintento empezó.
-		var result = document.getElementById('shopia-result');
+		var result = document.getElementById('chatbot-result');
 		result.textContent = 'Enviando...';
 		var xhr = new XMLHttpRequest();
-		// El nonce protege el reenvío contra peticiones no autorizadas.
-			var nonce = <?php echo json_encode( $nonce ?? '' ); ?>;
-			var url = ajaxurl + '?action=shopia_resend_provision&_ajax_nonce=' + encodeURIComponent(nonce);
+		var nonce = <?php echo json_encode( $nonce ?? '' ); ?>;
+		var url = ajaxurl + '?action=chatbot_resend_provision&_ajax_nonce=' + encodeURIComponent(nonce);
 		xhr.open('GET', url);
 		xhr.onload = function(){
-			// Mostramos solo si fue exitoso o no, evitando exponer cuerpos completos.
-				try{
-					var resp = JSON.parse(xhr.responseText);
-					if ( resp.success && resp.data && resp.data.status ) {
-						var code = resp.data.status;
-						if ( code >= 200 && code < 300 ) {
-							result.textContent = 'Conexión actualizada (' + code + ')';
-							setTimeout(function(){ window.location.reload(); }, 800);
-						} else {
-							result.textContent = 'Error (' + code + ')';
-						}
+			try{
+				var resp = JSON.parse(xhr.responseText);
+				if ( resp.success && resp.data && resp.data.status ) {
+					var code = resp.data.status;
+					if ( code >= 200 && code < 300 ) {
+						result.textContent = 'Conexión actualizada (' + code + ')';
+						setTimeout(function(){ window.location.reload(); }, 800);
 					} else {
-						result.textContent = 'Respuesta inesperada';
+						result.textContent = 'Error (' + code + ')';
 					}
-				} catch(e){ result.textContent = 'Respuesta no procesable'; }
+				} else {
+					result.textContent = 'Respuesta inesperada';
+				}
+			} catch(e){ result.textContent = 'Respuesta no procesable'; }
 		};
 		xhr.onerror = function(){ result.textContent = 'Error de red'; };
 		xhr.send();
@@ -181,20 +177,20 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-	var form = document.getElementById('shopia-keys-form');
+	var form = document.getElementById('chatbot-keys-form');
 	if (!form) return;
 	form.addEventListener('submit', function(e){
 		e.preventDefault();
-		var btn = document.getElementById('shopia-keys-submit');
-		var result = document.getElementById('shopia-keys-result');
+		var btn = document.getElementById('chatbot-keys-submit');
+		var result = document.getElementById('chatbot-keys-result');
 		btn.disabled = true;
 		result.textContent = 'Guardando...';
 
 		var fd = new FormData();
-		fd.append('action', 'shopia_update_keys');
+		fd.append('action', 'chatbot_update_keys');
 		fd.append('_ajax_nonce', <?php echo json_encode( $nonce_update ?? '' ); ?> );
-		fd.append('consumerKey', document.getElementById('shopia_consumerKey').value );
-		fd.append('consumerSecret', document.getElementById('shopia_consumerSecret').value );
+		fd.append('consumerKey', document.getElementById('chatbot_consumerKey').value );
+		fd.append('consumerSecret', document.getElementById('chatbot_consumerSecret').value );
 
 		fetch(ajaxurl, { method: 'POST', body: fd, credentials: 'same-origin' })
 			.then(function(resp){ return resp.json().then(function(json){ return { status: resp.status, body: json }; }); })

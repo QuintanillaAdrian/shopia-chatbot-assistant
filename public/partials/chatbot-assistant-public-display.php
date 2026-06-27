@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Provide a public-facing view for the plugin
@@ -8,8 +8,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/public/partials
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/public/partials
  */
 ?>
 

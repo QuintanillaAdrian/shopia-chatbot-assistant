@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Fired when the plugin is uninstalled.
@@ -22,7 +22,7 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
+ * @package    Chatbot_Assistant
  */
 
 // If uninstall not called from WordPress, then exit.

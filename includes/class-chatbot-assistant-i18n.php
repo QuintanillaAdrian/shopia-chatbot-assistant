@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Define the internationalization functionality
@@ -9,8 +9,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  */
 
 /**
@@ -20,11 +20,11 @@
  * so that it is ready for translation.
  *
  * @since      1.0.0
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  * @author     Quintanilla <adrianq1299@gmail.com>
  */
-class Shopia_Chatbot_Assistant_i18n {
+class Chatbot_Assistant_i18n {
 
 
 	/**
@@ -35,7 +35,7 @@ class Shopia_Chatbot_Assistant_i18n {
 	public function load_plugin_textdomain() {
 
 		load_plugin_textdomain(
-			'shopia-chatbot-assistant',
+			'chatbot-assistant',
 			false,
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);

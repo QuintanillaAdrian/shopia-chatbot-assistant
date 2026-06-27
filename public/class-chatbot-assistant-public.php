@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * The public-facing functionality of the plugin.
@@ -6,8 +6,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/public
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/public
  */
 
 /**
@@ -16,11 +16,11 @@
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the public-facing stylesheet and JavaScript.
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/public
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/public
  * @author     Quintanilla <adrianq1299@gmail.com>
  */
-class Shopia_Chatbot_Assistant_Public {
+class Chatbot_Assistant_Public {
 
 	/**
 	 * The ID of this plugin.
@@ -65,15 +65,15 @@ class Shopia_Chatbot_Assistant_Public {
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Shopia_Chatbot_Assistant_Loader as all of the hooks are defined
+		 * defined in Chatbot_Assistant_Loader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Shopia_Chatbot_Assistant_Loader will then create the relationship
+		 * The Chatbot_Assistant_Loader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/shopia-chatbot-assistant-public.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/chatbot-assistant-public.css', array(), $this->version, 'all' );
 
 	}
 
@@ -88,15 +88,15 @@ class Shopia_Chatbot_Assistant_Public {
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Shopia_Chatbot_Assistant_Loader as all of the hooks are defined
+		 * defined in Chatbot_Assistant_Loader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Shopia_Chatbot_Assistant_Loader will then create the relationship
+		 * The Chatbot_Assistant_Loader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/shopia-chatbot-assistant-public.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/chatbot-assistant-public.js', array( 'jquery' ), $this->version, false );
 
 	}
 

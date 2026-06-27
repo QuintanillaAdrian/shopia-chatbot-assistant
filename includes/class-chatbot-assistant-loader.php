@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Register all actions and filters for the plugin
@@ -6,8 +6,8 @@
  * @link       https://https://portafolio-adrianquintanilla.vercel.app/
  * @since      1.0.0
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  */
 
 /**
@@ -17,11 +17,11 @@
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * @package    Shopia_Chatbot_Assistant
- * @subpackage Shopia_Chatbot_Assistant/includes
+ * @package    Chatbot_Assistant
+ * @subpackage Chatbot_Assistant/includes
  * @author     Quintanilla <adrianq1299@gmail.com>
  */
-class Shopia_Chatbot_Assistant_Loader {
+class Chatbot_Assistant_Loader {
 
 	/**
 	 * The array of actions registered with WordPress.

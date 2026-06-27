@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * WP-CLI command wrapper for provisioning actions.
  */
@@ -16,7 +16,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
      * constructs a minimal parameter set and calls the provisioning handler
      * in-process to avoid doing an HTTP self-request.
      */
-    class Shopia_Chatbot_Assistant_CLI {
+    class Chatbot_Assistant_CLI {
 
         /**
          * Provision command entrypoint.
@@ -47,18 +47,18 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
             // the same shape it expects when called over HTTP. In some CLI contexts
             // WP internals don't populate JSON params correctly, so we provide a
             // tiny fallback object that implements get_json_params().
-            $request = new WP_REST_Request( 'POST', '/shopia/v1/provision' );
+            $request = new WP_REST_Request( 'POST', '/chatbot/v1/provision' );
             $request->set_body_params( $params );
 
             if ( ! empty( $request->get_json_params() ) ) {
-                $response = Shopia_Chatbot_Assistant_Provision::handle_provision( $request );
+                $response = Chatbot_Assistant_Provision::handle_provision( $request );
             } else {
                 $fallback = new class( $params ) {
                     private $p;
                     public function __construct( $p ) { $this->p = $p; }
                     public function get_json_params() { return $this->p; }
                 };
-                $response = Shopia_Chatbot_Assistant_Provision::handle_provision( $fallback );
+                $response = Chatbot_Assistant_Provision::handle_provision( $fallback );
             }
 
             if ( is_wp_error( $response ) ) {
@@ -79,7 +79,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
     }
 
     // Register new, clearer command name: `wp mcp request provision`
-    WP_CLI::add_command( 'mcp request', 'Shopia_Chatbot_Assistant_CLI' );
+    WP_CLI::add_command( 'mcp request', 'Chatbot_Assistant_CLI' );
     // Keep backward-compatible alias for existing scripts: `wp shopia provision`
-    WP_CLI::add_command( 'shopia', 'Shopia_Chatbot_Assistant_CLI' );
+    WP_CLI::add_command( 'chatbot', 'Chatbot_Assistant_CLI' );
 }
