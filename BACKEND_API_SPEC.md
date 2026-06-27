@@ -1,6 +1,6 @@
-# Shopia Backend — API Specification
+# chatbot Backend — API Specification
 
-**Base URL:** `https://api.shopia.io/api`  
+**Base URL:** `https://api.chatbot.io/api`  
 **Version:** 1.0.1  
 **Authentication:** Bearer Token (API Key generada por el plugin en instalación)
 
@@ -66,7 +66,7 @@ El wizard puede retomarse — si el emprendedor cierra el browser, el `current_s
 ### 1. POST /tenants
 **Paso 1 — Registro inicial del tenant**
 
-El plugin genera la API Key localmente, la hashea y la envía junto con los datos básicos de la tienda. El backend crea el registro en PostgreSQL y devuelve el `tenant_id` que el plugin guardará en `wp_shopia_tenants` para todos los requests posteriores.
+El plugin genera la API Key localmente, la hashea y la envía junto con los datos básicos de la tienda. El backend crea el registro en PostgreSQL y devuelve el `tenant_id` que el plugin guardará en `wp_chatbot_tenants` para todos los requests posteriores.
 
 **Request:**
 ```json
@@ -115,7 +115,7 @@ $consumer_secret = 'cs_' . wc_rand_hash();
 
 $wpdb->insert($wpdb->prefix . 'woocommerce_api_keys', [
     'user_id'         => get_current_user_id(),
-    'description'     => 'Shopia - Asistente de Ventas',
+    'description'     => 'chatbot - Asistente de Ventas',
     'permissions'     => 'read_write',
     'consumer_key'    => wc_api_hash($consumer_key),  // hash — WC solo guarda esto
     'consumer_secret' => $consumer_secret,
@@ -454,7 +454,7 @@ X-RateLimit-Reset: 1719396060
 
 El backend notifica al plugin de cambios de estado vía webhook. El plugin expone un endpoint interno en WordPress.
 
-**POST {site_url}/wp-json/shopia/v1/webhook**
+**POST {site_url}/wp-json/chatbot/v1/webhook**
 
 ```json
 {
@@ -488,7 +488,7 @@ El backend notifica al plugin de cambios de estado vía webhook. El plugin expon
 ### Plugin (PHP)
 - Generar API Key con `wp_generate_uuid4()` al activar el plugin
 - Guardar API Key en texto plano en `wp_options` (solo acceso local)
-- Guardar `tenant_id` y `api_key_hash` en `wp_shopia_tenants`
+- Guardar `tenant_id` y `api_key_hash` en `wp_chatbot_tenants`
 - Crear CK/CS de WooCommerce programáticamente con `wc_rand_hash()` en el Paso 2
 - Capturar CK/CS inmediatamente después de crearlas — WooCommerce solo guarda el hash después
 - Enviar CK/CS al backend en texto plano por HTTPS — nunca guardarlas localmente
@@ -513,4 +513,4 @@ El backend notifica al plugin de cambios de estado vía webhook. El plugin expon
 
 ---
 
-*Shopia Backend API v1.0.1 — Junio 2026*
+*chatbot Backend API v1.0.1 — Junio 2026*
